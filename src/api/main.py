@@ -56,6 +56,7 @@ async def root():
         "name": "Archangel AI Monetization System",
         "version": "1.0.0",
         "status": "operational",
+        "anthropic_configured": bool(settings.anthropic_api_key),
         "timestamp": datetime.utcnow().isoformat(),
         "docs": "/docs"
     }
