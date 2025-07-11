@@ -40,19 +40,6 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-@asynccontextmanager
-async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
-    """Get async database session context manager."""
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
-
 # Dependency for FastAPI
 def get_db_session() -> Generator[Session, None, None]:
     """FastAPI dependency for database session."""
