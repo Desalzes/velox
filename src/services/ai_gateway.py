@@ -180,6 +180,10 @@ class AIGateway:
             "vicuna": "vicuna",
             "wizardcoder": "wizardcoder",
             
+            # User's specific models
+            "mistral:latest": "mistral:latest",
+            "deepseek-r1:latest": "deepseek-r1:latest",
+            
             # Backwards compatibility
             "llama-2-7b": "llama2:7b",
             "code-llama": "codellama",
@@ -197,9 +201,16 @@ class AIGateway:
             # For local models, pass through the exact name to Ollama
             potential_base_models = ["mistral", "llama2", "llama3", "llama3.1", "codellama", 
                                    "mixtral", "phi3", "gemma", "neural-chat", "orca-mini", 
-                                   "vicuna", "wizardcoder", "deepseek-r1"]
+                                   "vicuna", "wizardcoder", "deepseek-r1", "deepseek", "qwen"]
             
             model_base = model_name.split(':')[0]  # Get base name before any colon
+            
+            # Also check for common patterns like deepseek-r1
+            if '-' in model_name:
+                model_base_with_dash = model_name.split(':')[0]  # Keep full name before colon
+                if any(base in model_base_with_dash for base in potential_base_models):
+                    return {"provider": "local", "model": model_name}
+            
             if model_base in potential_base_models or model_name.endswith(':latest'):
                 return {"provider": "local", "model": model_name}  # Pass exact name to Ollama
             
