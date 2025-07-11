@@ -88,7 +88,14 @@ class AIGateway:
             # Return demo response when API keys aren't configured
             user_message = ""
             if request_data.get("messages"):
-                user_message = request_data["messages"][-1].get("content", "")
+                last_message = request_data["messages"][-1]
+                # Handle both dict and Pydantic object
+                if hasattr(last_message, 'content'):
+                    user_message = last_message.content
+                elif isinstance(last_message, dict):
+                    user_message = last_message.get("content", "")
+                else:
+                    user_message = str(last_message)
             
             demo_response = f"🤖 Demo Response: I received your message '{user_message}'. This is a demo response because no AI provider API keys are configured. To use real AI providers, add your OpenAI or Anthropic API keys to Railway environment variables."
             

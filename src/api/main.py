@@ -193,10 +193,18 @@ async def chat_completions(
             }
         )
     
-    # Prepare request data
+    # Prepare request data - convert Pydantic objects to dicts
+    messages_dict = []
+    for msg in request.messages:
+        messages_dict.append({
+            "role": msg.role,
+            "content": msg.content,
+            "name": getattr(msg, 'name', None)
+        })
+    
     request_data = {
         "type": "chat",
-        "messages": request.messages,
+        "messages": messages_dict,
         "max_tokens": request.max_tokens,
         "temperature": request.temperature,
         "stream": request.stream
