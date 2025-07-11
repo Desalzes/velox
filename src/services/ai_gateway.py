@@ -34,9 +34,13 @@ class AIGateway:
             
         # Anthropic
         if settings.anthropic_api_key:
-            self.providers["anthropic"] = Anthropic(
-                api_key=settings.anthropic_api_key
-            )
+            try:
+                self.providers["anthropic"] = Anthropic(
+                    api_key=settings.anthropic_api_key
+                )
+            except Exception as e:
+                print(f"⚠️ Failed to initialize Anthropic client: {e}")
+                self.providers["anthropic"] = None
     
     async def route_request(
         self, 
