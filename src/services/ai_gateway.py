@@ -1,5 +1,6 @@
 """AI Gateway service for routing requests to different AI providers."""
 import asyncio
+import os
 import time
 import json
 from typing import Dict, Any, List, Optional, AsyncGenerator
@@ -142,11 +143,47 @@ class AIGateway:
             "claude-3.5-sonnet": "claude-3-5-sonnet-20241022"
         }
         
-        # Local models
+        # Local models (Ollama)
         local_models = {
-            "llama-2-7b": "llama-2-7b",
-            "code-llama": "code-llama",
-            "mistral-7b": "mistral-7b"
+            # Llama models
+            "llama2": "llama2",
+            "llama2:7b": "llama2:7b", 
+            "llama2:13b": "llama2:13b",
+            "llama2:70b": "llama2:70b",
+            "llama3": "llama3",
+            "llama3:8b": "llama3:8b",
+            "llama3:70b": "llama3:70b",
+            "llama3.1": "llama3.1",
+            "llama3.1:8b": "llama3.1:8b",
+            "llama3.1:70b": "llama3.1:70b",
+            
+            # Code models
+            "codellama": "codellama",
+            "codellama:7b": "codellama:7b",
+            "codellama:13b": "codellama:13b",
+            "codellama:34b": "codellama:34b",
+            
+            # Mistral models
+            "mistral": "mistral",
+            "mistral:7b": "mistral:7b",
+            "mixtral": "mixtral",
+            "mixtral:8x7b": "mixtral:8x7b",
+            
+            # Specialized models
+            "phi3": "phi3",
+            "phi3:mini": "phi3:mini",
+            "gemma": "gemma",
+            "gemma:2b": "gemma:2b",
+            "gemma:7b": "gemma:7b",
+            "neural-chat": "neural-chat",
+            "orca-mini": "orca-mini",
+            "vicuna": "vicuna",
+            "wizardcoder": "wizardcoder",
+            
+            # Backwards compatibility
+            "llama-2-7b": "llama2:7b",
+            "code-llama": "codellama",
+            "mistral-7b": "mistral:7b"
         }
         
         if model_name in openai_models:
@@ -259,33 +296,91 @@ class AIGateway:
         model: str, 
         request_data: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Handle local model request."""
-        
-        # This is a placeholder for local model integration
-        # In a real implementation, this would connect to local LLM servers
-        # like Ollama, vLLM, or custom endpoints
+        """Handle local model request via Ollama."""
         
         messages = request_data.get("messages", [])
-        prompt = self._convert_messages_to_prompt(messages)
+        max_tokens = request_data.get("max_tokens", 1000)
+        temperature = request_data.get("temperature", 0.7)
         
-        # Simulate local model response
-        await asyncio.sleep(0.5)  # Simulate processing time
+        # Get Ollama endpoint from environment or use default
+        ollama_url = os.getenv("OLLAMA_URL", "http://localhost:11434")
         
-        response_text = f"[Local Model {model}] This is a simulated response to: {prompt[:100]}..."
-        
-        # Estimate token usage (rough approximation)
-        input_tokens = len(prompt.split()) * 1.3  # Rough token estimation
-        output_tokens = len(response_text.split()) * 1.3
-        
-        return {
-            "response": response_text,
-            "usage": {
-                "input_tokens": int(input_tokens),
-                "output_tokens": int(output_tokens),
-                "total_tokens": int(input_tokens + output_tokens)
-            },
-            "finish_reason": "stop"
-        }
+        try:
+            # Prepare Ollama request
+            ollama_payload = {
+                "model": model,
+                "messages": messages,
+                "stream": False,
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": max_tokens
+                }
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"{ollama_url}/api/chat",
+                    json=ollama_payload,
+                    timeout=aiohttp.ClientTimeout(total=60)
+                ) as response:
+                    
+                    if response.status == 200:
+                        result = await response.json()
+                        
+                        response_text = result.get("message", {}).get("content", "")
+                        
+                        # Extract token usage if available
+                        prompt_eval_count = result.get("prompt_eval_count", 0)
+                        eval_count = result.get("eval_count", 0)
+                        
+                        # If no token counts, estimate
+                        if not prompt_eval_count:
+                            prompt_text = " ".join([msg.get("content", "") for msg in messages])
+                            prompt_eval_count = int(len(prompt_text.split()) * 1.3)
+                        
+                        if not eval_count:
+                            eval_count = int(len(response_text.split()) * 1.3)
+                        
+                        return {
+                            "response": response_text,
+                            "usage": {
+                                "input_tokens": prompt_eval_count,
+                                "output_tokens": eval_count,
+                                "total_tokens": prompt_eval_count + eval_count
+                            },
+                            "finish_reason": "stop",
+                            "model_info": {
+                                "model": result.get("model", model),
+                                "total_duration": result.get("total_duration", 0),
+                                "load_duration": result.get("load_duration", 0),
+                                "prompt_eval_duration": result.get("prompt_eval_duration", 0),
+                                "eval_duration": result.get("eval_duration", 0)
+                            }
+                        }
+                    else:
+                        error_text = await response.text()
+                        raise Exception(f"Ollama API error {response.status}: {error_text}")
+                        
+        except Exception as e:
+            # Fallback to demo response if Ollama is unavailable
+            prompt = self._convert_messages_to_prompt(messages)
+            response_text = f"💰 LOCAL PROFIT MODE: I received your message. Your Ollama instance at {ollama_url} is not responding ({str(e)}). Please ensure Ollama is running and accessible. This request would generate 100% profit since there are no API costs!"
+            
+            # Estimate tokens for billing
+            input_tokens = len(prompt.split()) * 1.3
+            output_tokens = len(response_text.split()) * 1.3
+            
+            return {
+                "response": response_text,
+                "usage": {
+                    "input_tokens": int(input_tokens),
+                    "output_tokens": int(output_tokens),
+                    "total_tokens": int(input_tokens + output_tokens)
+                },
+                "finish_reason": "stop",
+                "local_mode": True,
+                "error": str(e)
+            }
     
     async def _handle_openai_stream(self, stream) -> AsyncGenerator[Dict[str, Any], None]:
         """Handle streaming OpenAI response."""
