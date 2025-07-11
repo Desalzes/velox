@@ -142,9 +142,11 @@ class AIGateway:
         # Anthropic models
         anthropic_models = {
             "claude-3-opus": "claude-3-opus-20240229",
-            "claude-3-sonnet": "claude-3-sonnet-20240229",
+            "claude-3-sonnet": "claude-3-sonnet-20240229", 
             "claude-3-haiku": "claude-3-haiku-20240307",
-            "claude-3.5-sonnet": "claude-3-5-sonnet-20241022"
+            "claude-3.5-sonnet": "claude-3-5-sonnet-20241022",
+            "claude-4-opus": "claude-4-opus-20250102",
+            "claude-4-sonnet": "claude-4-sonnet-20250102"
         }
         
         # Local models (Ollama)
