@@ -193,6 +193,16 @@ class AIGateway:
         elif model_name in local_models:
             return {"provider": "local", "model": local_models[model_name]}
         else:
+            # Check if it's a local model with :latest or other tag
+            # For local models, pass through the exact name to Ollama
+            potential_base_models = ["mistral", "llama2", "llama3", "llama3.1", "codellama", 
+                                   "mixtral", "phi3", "gemma", "neural-chat", "orca-mini", 
+                                   "vicuna", "wizardcoder", "deepseek-r1"]
+            
+            model_base = model_name.split(':')[0]  # Get base name before any colon
+            if model_base in potential_base_models or model_name.endswith(':latest'):
+                return {"provider": "local", "model": model_name}  # Pass exact name to Ollama
+            
             return None
     
     async def _handle_openai_request(
