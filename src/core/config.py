@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     redis_password: Optional[str] = Field(default=None, env="REDIS_PASSWORD")
     
     # Security
-    jwt_secret: str = Field(env="JWT_SECRET")
+    jwt_secret: str = Field(default="fallback-jwt-secret-key-2024", env="JWT_SECRET")
     api_key_length: int = Field(default=32)
     password_min_length: int = Field(default=8)
     
