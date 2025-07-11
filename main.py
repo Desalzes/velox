@@ -60,6 +60,29 @@ async def run_server(args):
     try:
         create_tables()
         print("✓ Database tables ensured")
+        
+        # Create default admin user if no users exist
+        from src.core.database import get_db
+        from src.api.auth import create_user
+        
+        with get_db() as db:
+            from src.models.database import User
+            user_count = db.query(User).count()
+            
+            if user_count == 0:
+                try:
+                    admin_user = create_user(
+                        db,
+                        email="admin@archangel.ai",
+                        password="admin123",
+                        full_name="Default Admin",
+                        is_verified=True
+                    )
+                    print(f"✓ Created default admin user: admin@archangel.ai / admin123")
+                    print(f"  API Key: {admin_user.api_key}")
+                except Exception as e:
+                    print(f"⚠️  Could not create default user: {e}")
+                    
     except Exception as e:
         print(f"⚠️  Database setup warning: {e}")
     
