@@ -130,12 +130,13 @@ def handle_user_commands(args):
         except Exception as e:
             print(f"❌ Unexpected error: {e}")
 
-async def handle_analytics_commands(args):
+def handle_analytics_commands(args):
     """Handle analytics commands."""
     from datetime import datetime, timedelta
     from src.core.database import get_db
     from src.services.revenue_engine import RevenueEngine
     import json
+    import asyncio
     
     print(f"Generating analytics report for last {args.days} days...")
     
@@ -146,7 +147,7 @@ async def handle_analytics_commands(args):
     
     try:
         with get_db() as db:
-            analytics = await revenue_engine.get_revenue_analytics(db, start_date, end_date)
+            analytics = asyncio.run(revenue_engine.get_revenue_analytics(db, start_date, end_date))
             
             if args.output:
                 with open(args.output, 'w') as f:
@@ -216,7 +217,7 @@ async def main():
             handle_user_commands(args)
             
         elif args.command == "analytics":
-            await handle_analytics_commands(args)
+            handle_analytics_commands(args)
             
         else:
             print(f"Unknown command: {args.command}")

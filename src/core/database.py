@@ -1,39 +1,23 @@
 """Database connection and session management."""
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, Session
-from contextlib import contextmanager, asynccontextmanager
-from typing import Generator, AsyncGenerator
+from contextlib import contextmanager
+from typing import Generator
 
 from .config import get_settings
 from ..models.database import Base
 
 settings = get_settings()
 
-# Create synchronous engine
+# Create synchronous engine only - more reliable for Railway deployment
 engine = create_engine(
     settings.database_url,
     pool_pre_ping=True,
     echo=settings.debug
 )
 
-# Create async engine for async operations
-if settings.database_url.startswith("sqlite"):
-    async_database_url = settings.database_url.replace("sqlite://", "sqlite+aiosqlite://")
-else:
-    async_database_url = settings.database_url.replace("postgresql://", "postgresql+asyncpg://")
-
-async_engine = create_async_engine(
-    async_database_url,
-    pool_pre_ping=True,
-    echo=settings.debug
-)
-
-# Session factories
+# Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-AsyncSessionLocal = sessionmaker(
-    async_engine, class_=AsyncSession, expire_on_commit=False
-)
 
 def create_tables():
     """Create all database tables."""
@@ -78,10 +62,3 @@ def get_db_session() -> Generator[Session, None, None]:
     finally:
         db.close()
 
-async def get_async_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """FastAPI dependency for async database session."""
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.close()
