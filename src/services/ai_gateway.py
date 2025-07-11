@@ -32,8 +32,9 @@ class AIGateway:
                 api_key=settings.openai_api_key
             )
             
-        # Anthropic
-        if settings.anthropic_api_key:
+        # Anthropic - temporarily disabled due to compatibility issues
+        # Will re-enable once we fix the httpx/proxies issue
+        if False:  # settings.anthropic_api_key:
             try:
                 self.providers["anthropic"] = Anthropic(
                     api_key=settings.anthropic_api_key
