@@ -121,8 +121,8 @@ class UsageRecord(Base):
     success = Column(Boolean, default=True)
     error_message = Column(Text)
     
-    # Metadata
-    metadata = Column(JSON)
+    # Request metadata
+    request_metadata = Column(JSON)
     ip_address = Column(String(45))
     user_agent = Column(Text)
     
@@ -155,8 +155,8 @@ class Payment(Base):
     billing_period_start = Column(DateTime)
     billing_period_end = Column(DateTime)
     
-    # Metadata
-    metadata = Column(JSON)
+    # Payment metadata
+    payment_metadata = Column(JSON)
     failure_reason = Column(Text)
     
     created_at = Column(DateTime, default=datetime.utcnow)

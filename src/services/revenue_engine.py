@@ -102,7 +102,7 @@ class RevenueEngine:
             response_time_ms=usage_data.get("response_time_ms"),
             success=usage_data.get("success", True),
             error_message=usage_data.get("error_message"),
-            metadata=usage_data.get("metadata"),
+            request_metadata=usage_data.get("metadata"),
             ip_address=usage_data.get("ip_address"),
             user_agent=usage_data.get("user_agent")
         )
