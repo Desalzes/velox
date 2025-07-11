@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 import uvicorn
-from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import StreamingResponse
@@ -16,7 +16,7 @@ from ..models.database import User, UsageRecord, Subscription
 from ..services.ai_gateway import AIGateway
 from ..services.revenue_engine import RevenueEngine
 from .schemas import *
-from .auth import get_current_user, create_access_token, verify_api_key
+from .auth import get_current_user, create_access_token, verify_api_key, authenticate_user, create_user, ACCESS_TOKEN_EXPIRE_MINUTES
 
 settings = get_settings()
 config = get_config()
@@ -73,6 +73,102 @@ async def health_check():
             "database": "healthy",
             "ai_providers": ai_health
         }
+    }
+
+# Authentication Endpoints
+@app.post("/auth/register", response_model=UserResponse)
+async def register(
+    user_data: UserCreate,
+    db: Session = Depends(get_db_session)
+):
+    """Register a new user."""
+    try:
+        user = create_user(
+            db,
+            email=user_data.email,
+            password=user_data.password,
+            username=user_data.username,
+            full_name=user_data.full_name,
+            is_verified=True  # Auto-verify for simplicity
+        )
+        
+        return UserResponse(
+            id=user.id,
+            uuid=user.uuid,
+            email=user.email,
+            username=user.username,
+            full_name=user.full_name,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            subscription_tier=user.subscription_tier,
+            created_at=user.created_at.isoformat()
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Registration failed")
+
+@app.post("/auth/login", response_model=Token)
+async def login(
+    login_data: UserLogin,
+    db: Session = Depends(get_db_session)
+):
+    """Login and get access token."""
+    user = authenticate_user(db, login_data.email, login_data.password)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(user.id)}, 
+        expires_delta=access_token_expires
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_in=int(access_token_expires.total_seconds()),
+        user=UserResponse(
+            id=user.id,
+            uuid=user.uuid,
+            email=user.email,
+            username=user.username,
+            full_name=user.full_name,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            subscription_tier=user.subscription_tier,
+            created_at=user.created_at.isoformat()
+        )
+    )
+
+@app.get("/auth/me", response_model=UserResponse)
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user information."""
+    return UserResponse(
+        id=current_user.id,
+        uuid=current_user.uuid,
+        email=current_user.email,
+        username=current_user.username,
+        full_name=current_user.full_name,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+        subscription_tier=current_user.subscription_tier,
+        created_at=current_user.created_at.isoformat()
+    )
+
+@app.get("/auth/api-key")
+async def get_api_key(current_user: User = Depends(get_current_user)):
+    """Get user's API key."""
+    return {
+        "api_key": current_user.api_key,
+        "created_at": current_user.api_key_created_at.isoformat() if current_user.api_key_created_at else None
     }
 
 # AI Chat Completion Endpoint
