@@ -1,0 +1,130 @@
+# Archangel AI Monetization System Configuration
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  debug: false
+  cors_enabled: true
+
+# Database Configuration
+database:
+  url: "sqlite:///archangel.db"
+  pool_size: 10
+  echo: false
+
+# Redis Configuration (for caching and rate limiting)
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: null
+
+# AI Provider Configuration
+ai_providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "https://api.openai.com/v1"
+    models:
+      - "gpt-4"
+      - "gpt-3.5-turbo"
+      - "text-embedding-ada-002"
+    cost_per_token:
+      "gpt-4": 0.00003
+      "gpt-3.5-turbo": 0.000002
+  
+  anthropic:
+    api_key: "${ANTHROPIC_API_KEY}"
+    base_url: "https://api.anthropic.com"
+    models:
+      - "claude-3-opus"
+      - "claude-3-sonnet"
+      - "claude-3-haiku"
+    cost_per_token:
+      "claude-3-opus": 0.000015
+      "claude-3-sonnet": 0.000003
+  
+  local:
+    enabled: true
+    models:
+      - "llama-2-7b"
+      - "code-llama"
+    cost_per_token: 0.0000001
+
+# Revenue Models
+revenue_models:
+  pay_per_use:
+    enabled: true
+    markup_percentage: 150  # 150% markup on provider costs
+    minimum_charge: 0.01
+  
+  subscription:
+    enabled: true
+    tiers:
+      free:
+        monthly_price: 0
+        request_limit: 100
+        rate_limit: "10/minute"
+      starter:
+        monthly_price: 29
+        request_limit: 10000
+        rate_limit: "100/minute"
+      professional:
+        monthly_price: 99
+        request_limit: 100000
+        rate_limit: "500/minute"
+      enterprise:
+        monthly_price: 999
+        request_limit: -1  # unlimited
+        rate_limit: "1000/minute"
+  
+  freemium:
+    enabled: true
+    free_requests_per_month: 1000
+    upgrade_prompts: true
+
+# Rate Limiting
+rate_limiting:
+  enabled: true
+  storage: "redis"
+  default_limits:
+    anonymous: "5/minute"
+    authenticated: "100/minute"
+  
+# Billing Configuration
+billing:
+  provider: "stripe"
+  currency: "USD"
+  invoice_frequency: "monthly"
+  payment_methods: ["card", "bank_transfer"]
+  
+# Analytics
+analytics:
+  enabled: true
+  retention_days: 365
+  real_time_dashboard: true
+  export_formats: ["csv", "json", "pdf"]
+
+# Security
+security:
+  jwt_secret: "${JWT_SECRET}"
+  api_key_length: 32
+  password_min_length: 8
+  two_factor_auth: true
+  ip_whitelist: []
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics_endpoint: "/metrics"
+  health_check_endpoint: "/health"
+  log_level: "INFO"
+  
+# Business Intelligence
+business_intelligence:
+  revenue_tracking: true
+  customer_analytics: true
+  churn_prediction: true
+  usage_optimization: true
+  cost_analysis: true
