@@ -25,7 +25,7 @@ config = get_config()
 app = FastAPI(
     title="Velox API Monetization System",
     description="AI-centric monetization platform with multi-provider support",
-    version="1.0.0",
+    version="1.0.1",
     docs_url="/docs",
     redoc_url="/redoc"
 )
