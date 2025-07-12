@@ -71,17 +71,30 @@ async def run_server(args):
             
             if user_count == 0:
                 try:
+                    # Create admin user with secure password
                     admin_user = create_user(
                         db,
                         email="admin@archangel.ai",
-                        password="admin123",
+                        password="SecureAdmin2024!",
                         full_name="Default Admin",
                         is_verified=True
                     )
-                    print(f"✓ Created default admin user: admin@archangel.ai / admin123")
+                    print(f"✓ Created default admin user: admin@archangel.ai")
                     print(f"  API Key: {admin_user.api_key}")
+                    
+                    # Create demo user for public access
+                    demo_user = create_user(
+                        db,
+                        email="demo@archangel.ai", 
+                        password="demo123",
+                        full_name="Demo User",
+                        is_verified=True
+                    )
+                    print(f"✓ Created demo user: demo@archangel.ai / demo123")
+                    print(f"  API Key: {demo_user.api_key}")
+                    
                 except Exception as e:
-                    print(f"⚠️  Could not create default user: {e}")
+                    print(f"⚠️  Could not create default users: {e}")
                     
     except Exception as e:
         print(f"⚠️  Database setup warning: {e}")
