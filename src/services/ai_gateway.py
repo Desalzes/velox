@@ -66,6 +66,8 @@ class AIGateway:
                 result = await self._handle_openai_request(actual_model, request_data)
             elif provider_name == "anthropic":
                 result = await self._handle_anthropic_request(actual_model, request_data)
+            elif provider_name == "groq":
+                result = await self._handle_groq_request(actual_model, request_data)
             elif provider_name == "local":
                 result = await self._handle_local_request(actual_model, request_data)
             else:
@@ -149,6 +151,17 @@ class AIGateway:
             "claude-4-sonnet": "claude-4-sonnet-20250102"
         }
         
+        # Groq models (fast inference)
+        groq_models = {
+            "llama-3.1-70b-versatile": "llama-3.1-70b-versatile",
+            "llama-3.1-8b-instant": "llama-3.1-8b-instant",
+            "llama-3-70b-8192": "llama-3-70b-8192",
+            "llama-3-8b-8192": "llama-3-8b-8192",
+            "mixtral-8x7b-32768": "mixtral-8x7b-32768",
+            "gemma-7b-it": "gemma-7b-it",
+            "gemma2-9b-it": "gemma2-9b-it"
+        }
+        
         # Local models (Ollama)
         local_models = {
             # Llama models
@@ -200,6 +213,8 @@ class AIGateway:
             return {"provider": "openai", "model": openai_models[model_name]}
         elif model_name in anthropic_models:
             return {"provider": "anthropic", "model": anthropic_models[model_name]}
+        elif model_name in groq_models:
+            return {"provider": "groq", "model": groq_models[model_name]}
         elif model_name in local_models:
             return {"provider": "local", "model": local_models[model_name]}
         else:
@@ -317,6 +332,60 @@ class AIGateway:
             },
             "finish_reason": "stop"
         }
+    
+    async def _handle_groq_request(
+        self, 
+        model: str, 
+        request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle Groq API request."""
+        
+        import aiohttp
+        import os
+        
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        if not groq_api_key:
+            raise ValueError("GROQ_API_KEY not configured")
+        
+        messages = request_data.get("messages", [])
+        max_tokens = request_data.get("max_tokens", 1000)
+        temperature = request_data.get("temperature", 0.7)
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": temperature
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {groq_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as response:
+                
+                if response.status == 200:
+                    result = await response.json()
+                    
+                    return {
+                        "response": result["choices"][0]["message"]["content"],
+                        "usage": {
+                            "input_tokens": result["usage"]["prompt_tokens"],
+                            "output_tokens": result["usage"]["completion_tokens"],
+                            "total_tokens": result["usage"]["total_tokens"]
+                        },
+                        "finish_reason": result["choices"][0]["finish_reason"]
+                    }
+                else:
+                    error_text = await response.text()
+                    raise ValueError(f"Groq API error {response.status}: {error_text}")
     
     async def _handle_local_request(
         self, 
