@@ -98,7 +98,7 @@ class UsageRecordResponse(BaseModel):
     request_id: str
     endpoint: str
     ai_provider: Optional[str]
-    model_name: Optional[str]
+    model_name: Optional[str] = Field(alias="model_name")
     input_tokens: int
     output_tokens: int
     total_tokens: int
@@ -111,6 +111,7 @@ class UsageRecordResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        protected_namespaces = ()
 
 class UsageSummary(BaseModel):
     period_start: str
@@ -121,7 +122,10 @@ class UsageSummary(BaseModel):
     successful_requests: int
     failed_requests: int
     average_response_time: Optional[float]
-    model_breakdown: Dict[str, Any]
+    model_breakdown: Dict[str, Any] = Field(alias="model_breakdown")
+    
+    class Config:
+        protected_namespaces = ()
 
 # Payment schemas
 class PaymentRequest(BaseModel):
