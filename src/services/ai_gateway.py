@@ -41,6 +41,12 @@ class AIGateway:
             except Exception as e:
                 print(f"⚠️ Failed to initialize Anthropic client: {e}")
                 self.providers["anthropic"] = None
+        
+        # Groq - check for API key
+        if settings.groq_api_key:
+            # Groq uses aiohttp directly, no client initialization needed
+            # Just mark it as available
+            self.providers["groq"] = "available"
     
     async def route_request(
         self, 
@@ -63,10 +69,16 @@ class AIGateway:
         
         try:
             if provider_name == "openai":
+                if "openai" not in self.providers:
+                    raise ValueError("OpenAI provider not initialized - check OPENAI_API_KEY")
                 result = await self._handle_openai_request(actual_model, request_data)
             elif provider_name == "anthropic":
+                if "anthropic" not in self.providers:
+                    raise ValueError("Anthropic provider not initialized - check ANTHROPIC_API_KEY")
                 result = await self._handle_anthropic_request(actual_model, request_data)
             elif provider_name == "groq":
+                if "groq" not in self.providers:
+                    raise ValueError("Groq provider not initialized - check GROQ_API_KEY")
                 result = await self._handle_groq_request(actual_model, request_data)
             elif provider_name == "local":
                 result = await self._handle_local_request(actual_model, request_data)
@@ -340,11 +352,7 @@ class AIGateway:
     ) -> Dict[str, Any]:
         """Handle Groq API request."""
         
-        import aiohttp
-        import os
-        
-        groq_api_key = os.getenv("GROQ_API_KEY")
-        if not groq_api_key:
+        if not settings.groq_api_key:
             raise ValueError("GROQ_API_KEY not configured")
         
         messages = request_data.get("messages", [])
@@ -359,7 +367,7 @@ class AIGateway:
         }
         
         headers = {
-            "Authorization": f"Bearer {groq_api_key}",
+            "Authorization": f"Bearer {settings.groq_api_key}",
             "Content-Type": "application/json"
         }
         

@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # AI Providers
     openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(default=None, env="ANTHROPIC_API_KEY")
+    groq_api_key: Optional[str] = Field(default=None, env="GROQ_API_KEY")
     
     # Stripe
     stripe_secret_key: Optional[str] = Field(default=None, env="STRIPE_SECRET_KEY")
