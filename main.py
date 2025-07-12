@@ -1,4 +1,4 @@
-"""Main entry point for Archangel AI Monetization System."""
+"""Main entry point for Velox API Monetization System."""
 import asyncio
 import sys
 import argparse
@@ -16,7 +16,7 @@ settings = get_settings()
 
 def create_cli_parser():
     """Create command line argument parser."""
-    parser = argparse.ArgumentParser(description="Archangel AI Monetization System")
+    parser = argparse.ArgumentParser(description="Velox API Monetization System")
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -54,7 +54,7 @@ def create_cli_parser():
 
 async def run_server(args):
     """Run the API server."""
-    print(f"Starting Archangel AI Monetization System on {args.host}:{args.port}")
+    print(f"Starting Velox API Monetization System on {args.host}:{args.port}")
     
     # Auto-create database tables if they don't exist
     try:
@@ -207,7 +207,7 @@ def handle_analytics_commands(args):
 def show_help():
     """Show help information."""
     print("""
-Archangel AI Monetization System
+Velox API Monetization System
 
 Available commands:
   server          Start the API server

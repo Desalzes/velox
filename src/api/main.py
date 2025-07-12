@@ -1,4 +1,4 @@
-"""Main FastAPI application for Archangel AI Monetization System."""
+"""Main FastAPI application for Velox API Monetization System."""
 import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
@@ -23,7 +23,7 @@ config = get_config()
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Archangel AI Monetization System",
+    title="Velox API Monetization System",
     description="AI-centric monetization platform with multi-provider support",
     version="1.0.0",
     docs_url="/docs",
@@ -53,7 +53,7 @@ async def startup_event():
 async def root():
     """Root endpoint with system information."""
     return {
-        "name": "Archangel AI Monetization System",
+        "name": "Velox API Monetization System",
         "version": "1.0.0",
         "status": "operational",
         "anthropic_configured": bool(settings.anthropic_api_key),

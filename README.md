@@ -1,4 +1,4 @@
-# Archangel - AI-Centric Monetization System
+# Velox API - AI-Centric Monetization System
 
 A comprehensive platform for monetizing AI services with multiple revenue models, usage tracking, and advanced analytics.
 
