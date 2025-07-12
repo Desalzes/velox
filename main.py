@@ -74,23 +74,23 @@ async def run_server(args):
                     # Create admin user with secure password
                     admin_user = create_user(
                         db,
-                        email="admin@archangel.ai",
+                        email="admin@velox-api.com",
                         password="SecureAdmin2024!",
                         full_name="Default Admin",
                         is_verified=True
                     )
-                    print(f"✓ Created default admin user: admin@archangel.ai")
+                    print(f"✓ Created default admin user: admin@velox-api.com")
                     print(f"  API Key: {admin_user.api_key}")
                     
                     # Create demo user for public access
                     demo_user = create_user(
                         db,
-                        email="demo@archangel.ai", 
+                        email="demo@velox-api.com", 
                         password="demo123",
                         full_name="Demo User",
                         is_verified=True
                     )
-                    print(f"✓ Created demo user: demo@archangel.ai / demo123")
+                    print(f"✓ Created demo user: demo@velox-api.com / demo123")
                     print(f"  API Key: {demo_user.api_key}")
                     
                 except Exception as e:
