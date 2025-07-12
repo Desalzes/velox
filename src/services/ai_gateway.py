@@ -26,11 +26,17 @@ class AIGateway:
     def _initialize_providers(self):
         """Initialize AI provider clients."""
         
+        print(f"🔧 Initializing AI providers...")
+        print(f"🔧 OpenAI key present: {bool(settings.openai_api_key)}")
+        print(f"🔧 Anthropic key present: {bool(settings.anthropic_api_key)}")
+        print(f"🔧 Groq key present: {bool(settings.groq_api_key)}")
+        
         # OpenAI
         if settings.openai_api_key:
             self.providers["openai"] = openai.AsyncOpenAI(
                 api_key=settings.openai_api_key
             )
+            print(f"✅ OpenAI provider initialized")
             
         # Anthropic - using your API key!
         if settings.anthropic_api_key:
@@ -38,6 +44,7 @@ class AIGateway:
                 self.providers["anthropic"] = Anthropic(
                     api_key=settings.anthropic_api_key
                 )
+                print(f"✅ Anthropic provider initialized")
             except Exception as e:
                 print(f"⚠️ Failed to initialize Anthropic client: {e}")
                 self.providers["anthropic"] = None
@@ -47,6 +54,9 @@ class AIGateway:
             # Groq uses aiohttp directly, no client initialization needed
             # Just mark it as available
             self.providers["groq"] = "available"
+            print(f"✅ Groq provider initialized")
+        
+        print(f"🔧 Total providers initialized: {list(self.providers.keys())}")
     
     async def route_request(
         self, 
